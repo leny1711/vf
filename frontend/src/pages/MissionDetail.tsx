@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { missionsAPI, paymentsAPI, ratingsAPI } from '../services/api';
+import { missionsAPI } from '../services/api';
 import PaymentComponent from '../components/PaymentComponent';
 import '../styles/MissionDetail.css';
 

@@ -51,8 +51,8 @@ export class AuthService {
 
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      config.jwtSecret as jwt.Secret,
+      { expiresIn: '7d' }
     );
 
     return { user, token };
@@ -79,8 +79,8 @@ export class AuthService {
 
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      config.jwtSecret as jwt.Secret,
+      { expiresIn: '7d' }
     );
 
     return {
