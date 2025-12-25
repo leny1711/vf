@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { config } from '../config/env';
+import { config } from '../../config/env';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -16,7 +16,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, config.jwtSecret) as { userId: string; role: string };
+    const decoded = jwt.verify(token, config.jwtSecret as string) as { userId: string; role: string };
     
     req.userId = decoded.userId;
     req.userRole = decoded.role;
