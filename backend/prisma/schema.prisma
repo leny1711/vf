@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  PROVIDER
+  ADMIN
+}
+
+enum MissionStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole @default(CLIENT)
+  isAvailable   Boolean  @default(false)
+  isBlocked     Boolean  @default(false)
+  latitude      Float?
+  longitude     Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  clientMissions    Mission[]  @relation("ClientMissions")
+  providerMissions  Mission[]  @relation("ProviderMissions")
+  clientRatings     Rating[]   @relation("ClientRatings")
+  providerRatings   Rating[]   @relation("ProviderRatings")
+  sentMessages      Message[]  @relation("SentMessages")
+  receivedMessages  Message[]  @relation("ReceivedMessages")
+
+  @@map("users")
+}
+
+model Mission {
+  id              String        @id @default(uuid())
+  title           String
+  description     String
+  address         String
+  latitude        Float
+  longitude       Float
+  price           Float
+  urgent          Boolean       @default(false)
+  status          MissionStatus @default(PENDING)
+  clientId        String
+  providerId      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  acceptedAt      DateTime?
+  completedAt     DateTime?
+
+  client          User          @relation("ClientMissions", fields: [clientId], references: [id])
+  provider        User?         @relation("ProviderMissions", fields: [providerId], references: [id])
+  payment         Payment?
+  rating          Rating?
+  messages        Message[]
+
+  @@map("missions")
+}
+
+model Payment {
+  id                  String        @id @default(uuid())
+  missionId           String        @unique
+  amount              Float
+  platformFee         Float
+  providerAmount      Float
+  status              PaymentStatus @default(PENDING)
+  stripePaymentIntent String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  mission             Mission       @relation(fields: [missionId], references: [id])
+
+  @@map("payments")
+}
+
+model Rating {
+  id          String   @id @default(uuid())
+  missionId   String   @unique
+  clientId    String
+  providerId  String
+  score       Int
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  mission     Mission  @relation(fields: [missionId], references: [id])
+  client      User     @relation("ClientRatings", fields: [clientId], references: [id])
+  provider    User     @relation("ProviderRatings", fields: [providerId], references: [id])
+
+  @@map("ratings")
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  missionId   String
+  senderId    String
+  receiverId  String
+  content     String
+  createdAt   DateTime @default(now())
+
+  mission     Mission  @relation(fields: [missionId], references: [id])
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
