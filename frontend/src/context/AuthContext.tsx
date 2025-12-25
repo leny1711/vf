@@ -1,15 +1,15 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../api/api';
+import { authAPI } from '../services/api';
 
 interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  phone?: string;
   role: 'CLIENT' | 'PROVIDER' | 'ADMIN';
   isAvailable?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface AuthContextType {
@@ -17,22 +17,12 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  register: (data: { email: string; password: string; firstName: string; lastName: string; role: string }) => Promise<void>;
+  logout: () => void;
+  updateUser: (user: User) => void;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  token: null,
-  loading: true,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
-  refreshProfile: async () => {},
-});
-
-export const useAuth = () => useContext(AuthContext);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -40,58 +30,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadStoredAuth();
+    // Check for stored token on mount
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
+
+    setLoading(false);
   }, []);
 
-  const loadStoredAuth = async () => {
+  const login = async (email: string, password: string) => {
     try {
-      const storedToken = await AsyncStorage.getItem('token');
-      if (storedToken) {
-        api.setToken(storedToken);
-        setToken(storedToken);
-        const profile = await api.getProfile();
-        setUser(profile);
-      }
-    } catch (error) {
-      console.error('Failed to load auth:', error);
-    } finally {
-      setLoading(false);
+      const response = await authAPI.login({ email, password });
+      const { token: newToken, user: newUser } = response.data;
+
+      setToken(newToken);
+      setUser(newUser);
+
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(newUser));
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Login failed');
     }
   };
 
-  const login = async (email: string, password: string) => {
-    const response = await api.login(email, password);
-    await AsyncStorage.setItem('token', response.token);
-    api.setToken(response.token);
-    setToken(response.token);
-    setUser(response.user);
+  const register = async (data: { email: string; password: string; firstName: string; lastName: string; role: string }) => {
+    try {
+      const response = await authAPI.register(data);
+      const { token: newToken, user: newUser } = response.data;
+
+      setToken(newToken);
+      setUser(newUser);
+
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(newUser));
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
   };
 
-  const register = async (data: any) => {
-    const response = await api.register(data);
-    await AsyncStorage.setItem('token', response.token);
-    api.setToken(response.token);
-    setToken(response.token);
-    setUser(response.user);
-  };
-
-  const logout = async () => {
-    await AsyncStorage.removeItem('token');
-    api.setToken(null);
+  const logout = () => {
     setToken(null);
     setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
-  const refreshProfile = async () => {
-    if (token) {
-      const profile = await api.getProfile();
-      setUser(profile);
-    }
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

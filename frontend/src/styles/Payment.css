@@ -1,0 +1,88 @@
+.payment-container {
+  background: #f9f9f9;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.payment-container h3 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.payment-amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 24px;
+}
+
+.card-element-container {
+  background: white;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.payment-actions .btn-primary,
+.payment-actions .btn-secondary {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.payment-actions .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.payment-actions .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.payment-actions .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.payment-actions .btn-secondary {
+  background: white;
+  color: #666;
+  border: 2px solid #ddd;
+}
+
+.payment-actions .btn-secondary:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.payment-note {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  font-style: italic;
+}
+
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border: 1px solid #fcc;
+}
